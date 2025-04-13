@@ -25,7 +25,7 @@ if not api_key:
 client = genai.Client(api_key=api_key)
 # client = genai.Client(api_key=api_key)
 
-max_iterations = 20
+max_iterations = 3
 last_response = None
 iteration = 0
 iteration_response = []
@@ -127,33 +127,35 @@ async def main():
                 
                 print("Created system prompt...")
                 
-                system_prompt = f"""You are an assistant that can control Keynote on a Windows system to create visual presentations. You have access to the following tools:{tools_description}
+                system_prompt = f"""You are an assistant that can control Keynote on Windows System to create visual presentations. You have access to various tools including Keynote control functions.
 
-                Your job is to create or modify presentations using structured, step-by-step reasoning and function calls. Always reflect on your reasoning before taking action, and clearly separate reasoning from tool execution.
-                For intermediate steps function calls:
-                FUNCTION_CALL: function_name|param1|param2|...
+Available tools:
+{tools_description}
 
-                Once the final step is complete, respond in this format:
-                FINAL_ANSWER: [Your final result or summary]
+You must respond with EXACTLY ONE line in one of these formats (no additional text):
+1. For function calls:
+   FUNCTION_CALL: function_name|param1|param2|...
+   
+2. For final answers:
+   FINAL_ANSWER: [Your answer here]
 
-                **Guidelines:**
-                - Think through each step logically before proceeding.
-                - Identify the type of reasoning you're doing (planning, arithmetic, etc.).
-                - Include a self-check for every step to verify correctness before moving forward.
-                - Use random but valid rectangle coordinates (x: 100–900, y: 100–600) and prefer rectangles taller than wide when possible.
-                - If any step fails, respond with:  
-                `FINAL_ANSWER: [Encountered an issue with tool execution or logic. Please retry or revise.]`
-                - Once the task is completed, send Final_Answer: [Done].
-                """
+Important:
+- To create a presentation, you need to: open Keynote, draw a rectangle, and add text inside it
+- Follow these steps in order - each step requires the previous one to be completed
+- When using draw_rectangle, use reasonable screen coordinates (e.g., x1: 400, y1: 300, x2: 800, y2: 500)
+- Be precise with your function calls
 
-                query = """Task: Create a presentation that explains the calculation of the exponential function with input 5.342 (i.e., e^5.342).  
+Examples:
+- FUNCTION_CALL: open_keynote
+- FUNCTION_CALL: draw_rectangle|400|300|800|500
+- FUNCTION_CALL: add_text_in_keynote|Hello World!
+- FINAL_ANSWER: [Presentation created successfully]
 
-                For each explanation step:
-                - Draw a rectangle (with random coordinates).
-                - Add the explanation as text inside it.
-                - Ensure all actions are logical and properly reasoned.
-                Proceed using the required format."""
+DO NOT include any explanations or additional text.
+Your entire response should be a single line starting with either FUNCTION_CALL: or FINAL_ANSWER:"""
 
+
+                query = """Create a Keynote presentation with a rectangle containing the text 'This text was added by an AI assistant using MCP!' Make sure to follow the proper sequence: open Keynote first, then draw a rectangle, then add the text."""
                 print("Starting iteration loop...")
                 
                 # Use global iteration variables
@@ -174,8 +176,6 @@ async def main():
                         response = await generate_with_timeout(client, prompt)
                         response_text = response.text.strip()
                         print(f"LLM Response: {response_text}")
-                        
-                        #print(f"{response_text.split('FINAL_ANSWER: [')[1]}")
                         
                         # Find the FUNCTION_CALL line in the response
                         for line in response_text.split('\n'):
@@ -225,10 +225,7 @@ async def main():
                                 
                                 # Convert the value to the correct type based on the schema
                                 if param_type == 'integer':
-                                    try:
-                                        arguments[param_name] = int(value)
-                                    except:
-                                        pass
+                                    arguments[param_name] = int(value)
                                 elif param_type == 'number':
                                     arguments[param_name] = float(value)
                                 elif param_type == 'array':

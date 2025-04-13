@@ -155,7 +155,9 @@ def fibonacci_numbers(n: int) -> list:
 
 @mcp.tool()
 async def draw_rectangle(x1: int, y1: int, x2: int, y2: int) -> dict:
-    """Draw a rectangle in Paint from (x1,y1) to (x2,y2)"""
+    """Draw a rectangle in Paint from (x1,y1) to (x2,y2). 
+    x1,x2,y1,y2 are integer values. 
+    To call the function, it only needs 4 integer values."""
     global paint_app
     try:
         if not paint_app:
@@ -191,8 +193,8 @@ async def draw_rectangle(x1: int, y1: int, x2: int, y2: int) -> dict:
         
         canvas_rect = canvas.rectangle()
 
-        canvas_x_offset = canvas_rect.left +50
-        canvas_y_offset = canvas_rect.top +50
+        canvas_x_offset = canvas_rect.left + 300
+        canvas_y_offset = canvas_rect.top  + 150
         
 
         # # Draw rectangle - coordinates should already be relative to the Paint window
@@ -205,8 +207,8 @@ async def draw_rectangle(x1: int, y1: int, x2: int, y2: int) -> dict:
         # time.sleep(0.2)
 
         # Code to change color to red
-        canvas.click_input(coords=(840, 70))  # Adjust coordinates as needed
-        time.sleep(0.2)
+        # canvas.click_input(coords=(840, 70))  # Adjust coordinates as needed
+        # time.sleep(0.2)
 
         canvas.click_input(coords=(x1 + canvas_x_offset, y1 + canvas_y_offset))
         time.sleep(0.2)  # Wait after clicking
@@ -250,8 +252,8 @@ async def draw_rectangle(x1: int, y1: int, x2: int, y2: int) -> dict:
         }
 
 @mcp.tool()
-async def add_text_in_paint(text: str) -> dict:
-    """Add text in Paint"""
+async def add_text_in_paint(text: str, x1: int, y1: int) -> dict:
+    """Add text in Paint at the location (x1,y1). x1 & y1 are integer values."""
     global paint_app
     try:
         if not paint_app:
@@ -287,14 +289,16 @@ async def add_text_in_paint(text: str) -> dict:
         # time.sleep(0.2)
 
         # Code to change color to red
-        canvas.click_input(coords=(890, 70))  # Adjust coordinates as needed
-        time.sleep(0.2)
+        # canvas.click_input(coords=(890, 70))  # Adjust coordinates as needed
+        # time.sleep(0.2)
 
         # Click where to start typing
-        canvas.click_input(coords=(600, 400))
+        offset_x = 300
+        offset_y = 150
+        canvas.click_input(coords=(x1+offset_x, y1+offset_y))
         time.sleep(0.1)
 
-        canvas.click_input(coords=(605, 405))
+        canvas.click_input(coords=(x1+5+offset_x, y1+5+offset_y))
         time.sleep(0.1)
 
         # Type the text passed from client
@@ -303,7 +307,7 @@ async def add_text_in_paint(text: str) -> dict:
                 # Handle space separately to avoid issues with typing
                 paint_window.type_keys('{SPACE}')
             else:
-                paint_window.type_keys(char)
+                paint_window.type_keys(f'{str(char)}')
             time.sleep(0.05)
         
         # Click to exit text mode
